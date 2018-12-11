@@ -1,6 +1,6 @@
 ---
 layout:     post
-title:      "从string优化看程序员进步"
+title:      "string 0 gc alloc"
 subtitle:   "csharp, c#, unity, string"
 date:       2018-12-11
 author:     "CodeSuperHero"
@@ -12,3 +12,5 @@ tags:
     - String
     - StringBuilder
 ---
+
+//TODO
