@@ -9,6 +9,7 @@ tags:
     - OS
     - Unix
     - Linux
+    - thought
 ---
 
 > This document is not completed and will be updated anytime.
@@ -16,26 +17,20 @@ tags:
 
 ## Catagory
 
-1. [Unix](#unix)
-	1. [Bell Labs](#bell-labs)
-	2. [Xenix](#xenix)
-	3. [BSD](#bsd)
-	4. [FreeBSD & Apple](#freebsd--apple)
-	5. [NeXTStep](#nextstep)
-	6. [Darwin](#darwin)
-	7. [POSIX](#posix)
-2. [Unix-like](#unix-like)
-	1. [Single Unix Specification](#single-unix-specification)
-	2. [Apple iOS](#apple-ios)
-	3. [XNU Kernel](#xnu-kernel)
-3. [Linux](#linux)
-	1. [Linux Kernel](#linux-kernel)
-	2. [GNU Project](#gnu-project)
-	3. [Android](#android)
-	4. [Android Kernel](#android-kernel)
-	5. [Android ROM](#android-rom)
-	6. [Chrome OS](#chrome-os)
-	7. [Chromium OS](#chromium-os)
+- [Catagory](#catagory)
+- [Unix](#unix)
+- [Unix-like](#unix-like)
+		- [Single UNIX Specification](#single-unix-specification)
+		- [Apple iOS](#apple-ios)
+		- [XNU Kernel](#xnu-kernel)
+- [Linux](#linux)
+		- [Linux Kernel](#linux-kernel)
+		- [GNU Project](#gnu-project)
+		- [Android](#android)
+		- [Android Kernel](#android-kernel)
+		- [Android ROM](#android-rom)
+		- [Chrome OS](#chrome-os)
+		- [Chromium OS](#chromium-os)
 
 ---
 
@@ -67,11 +62,11 @@ AT&T licensed Unix to outside parties(第三方) from the late 1970s, leading to
 FreeBSD 不但是 Open Source BSD 中占有率最高的，还直接影响了 Apple Inc : NeXT Computer 的团队在 FreeBSD 上衍生出了 NeXTSTEP 操作系统，这货后来在 Apple 时期演化成了 **Darwin** ，这个“达尔文”居然还是个开源系统，而且是 the Core of **Mac OS X** and **iOS**.
 
 - #### NeXTSTEP
-An **object-oriented**, multitasking OS. Low-level C but High-level OC language and runtime the first time, combined with an **OO aplication layer** and including several "kits".    
+An **object-oriented**, multitasking OS. Low-level C but High-level OC language and runtime the first time, combined with an **OO aplication layer** and including several "kits".
 大家都知道 NeXT 是 Steve Jobs 被 forced out of Apple 后和 a few of his coworkers 创办的，所以 **NeXTSTEP 绝对是证明 Jobs 实力的作品。**
 
 - #### Darwin
-[Darwin](http://en.wikipedia.org/wiki/Darwin_(operating_system\)), the core set of components upon which Mac OS X and iOS based, mostly POSIX compatible, but has never, by itself, been certified as being compatible with any version of **POSIX**. (OS X, since Leopard, has been certified as compatible with the Single UNIX Specification version 3)  
+[Darwin](http://en.wikipedia.org/wiki/Darwin_(operating_system\)), the core set of components upon which Mac OS X and iOS based, mostly POSIX compatible, but has never, by itself, been certified as being compatible with any version of **POSIX**. (OS X, since Leopard, has been certified as compatible with the Single UNIX Specification version 3)
 **所以说 Mac OS X 算是很正统 Unix 的了**
 
 - #### POSIX
@@ -97,7 +92,7 @@ An **object-oriented**, multitasking OS. Low-level C but High-level OC language 
 
 > A Unix-like (sometimes referred to as UN*X or *nix) operating system is one that behaves in a manner similar to a Unix system, while not necessarily conforming to or being certified to any version of the **Single UNIX Specification**.
 
-There is no standard for defining the term.  
+There is no standard for defining the term.
 其实 Unix-like 是个相对模糊的概念：
 
 * 最狭义的 Unix 单指 Bell Labs's Unix
@@ -170,14 +165,14 @@ Anyway, there eventually comes to the **GNU/Linux**
 
 #### Android
 
-Android is a mobile OS based on **Linux Kernel**, so it's definitely **Unix-like**.  
+Android is a mobile OS based on **Linux Kernel**, so it's definitely **Unix-like**.
 
 **Linux is under GPL so Android has to be open source**.
-Android's source code is released by Google under open source licenses, although most Android devices ultimately ship with a combination of open source and proprietary software, including proprietary software developed and licensed by Google *(GMS are all proprietary)*  
+Android's source code is released by Google under open source licenses, although most Android devices ultimately ship with a combination of open source and proprietary software, including proprietary software developed and licensed by Google *(GMS are all proprietary)*
 
 #### Android Kernel
 
-Android's kernel is based on one of the Linux kernel's long-term support (LTS) branches.   
+Android's kernel is based on one of the Linux kernel's long-term support (LTS) branches.
 
 **Android's variant of the Linux kernel** has further architectural changes that are implemented by Google outside the typical Linux kernel development cycle, and, certain features that Google contributed back to the Linux kernel. Google maintains a public code repo that contains their experimental work to re-base Android off the latest stable Linux versions.
 
@@ -188,11 +183,11 @@ Android Kernel 大概是 Linux Kernel 最得意的分支了，Android 也是 Lin
 
 既然提到 Android 就不得不提提 Android ROM
 
-ROM 的本义实际上是只读内存：  
+ROM 的本义实际上是只读内存：
 
 **Read-only memory** (ROM) is a class of storage medium used in computers and other electronic devices. Data stored in ROM can only be modified slowly, with difficulty, or not at all, so it is **mainly used to distribute firmware (固件)** (software that is very closely tied to specific hardware, and unlikely to need frequent updates).
 
-ROM 在发展的过程中不断进化，从只读演变成了可编程可擦除，并最终演化成了 Flash  
+ROM 在发展的过程中不断进化，从只读演变成了可编程可擦除，并最终演化成了 Flash
 
 * PROM (Programmable read-only memory)
 * EPROM (Erasable programmable read-only memory)
