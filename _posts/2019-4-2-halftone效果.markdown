@@ -100,10 +100,10 @@ Shader "Unlit/HalfTone"
 
 # 效果展示
 ### 原图
-<img src="../img/2b.png" width = "400" height = "200" alt="图片名称"/>
+<img src="https://raw.githubusercontent.com/CodeSuperHero/CodeSuperHero.github.io/master/img/shader/halftone.png" width = "400" height = "200" alt="图片名称"/>
 
 ### 滤镜图
-<img src="../img/shader/halftone_filter.png" width = "400" height = "200" alt="图片名称"/>
+<img src="https://raw.githubusercontent.com/CodeSuperHero/CodeSuperHero.github.io/master/img/shader/halftone_filter.png" width = "400" height = "200" alt="图片名称"/>
 
 ### 最终效果图
-<img src="../img/shader/halftone.png" width = "400" height = "200" alt="图片名称"/>
+<img src="https://raw.githubusercontent.com/CodeSuperHero/CodeSuperHero.github.io/master/img/shader/halftone.png" width = "400" height = "200" alt="图片名称"/>
