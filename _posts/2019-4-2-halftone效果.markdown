@@ -12,7 +12,7 @@ tags:
 
 
 
-# shader代码
+shader代码
 
 最近看到了halftone效果的文章，觉得还不错，尝试搬到Unity里面来实现下，halftone原理就不说了，有兴趣了解请Google一下。这里直接贴shader代码和效果图吧。
 
@@ -100,12 +100,12 @@ Shader "Unlit/HalfTone"
 }
 ```
 
-# 效果展示
-### 原图
+效果展示
+原图
 <img src="https://raw.githubusercontent.com/CodeSuperHero/CodeSuperHero.github.io/master/img/shader/halftone.png" width = "400" height = "200" alt="图片名称"/>
 
-### 滤镜图
+滤镜图
 <img src="https://raw.githubusercontent.com/CodeSuperHero/CodeSuperHero.github.io/master/img/shader/halftone_filter.png" width = "400" height = "200" alt="图片名称"/>
 
-### 最终效果图
+最终效果图
 <img src="https://raw.githubusercontent.com/CodeSuperHero/CodeSuperHero.github.io/master/img/shader/halftone.png" width = "400" height = "200" alt="图片名称"/>
