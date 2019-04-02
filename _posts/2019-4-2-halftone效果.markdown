@@ -12,7 +12,7 @@ tags:
 
 
 
-shader代码
+<h2>shader代码</h2>
 
 最近看到了halftone效果的文章，觉得还不错，尝试搬到Unity里面来实现下，halftone原理就不说了，有兴趣了解请Google一下。这里直接贴shader代码和效果图吧。
 
