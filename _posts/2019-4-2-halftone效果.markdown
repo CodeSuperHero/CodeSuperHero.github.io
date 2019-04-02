@@ -1,16 +1,15 @@
 ---
 layout:     post
-title:      "string 0 gc alloc"
-subtitle:   "csharp, c#, unity, string"
-date:       2018-12-11
+title:      "halftone in unity"
+subtitle:   "halftone, unity, shader"
+date:       2019-4-2
 author:     "CodeSuperHero"
-header-img: "img/csharp_gc.jpg"
+header-img: "img/2b.png"
 tags:
+    - halftone
     - Unity
-    - CSharp
-    - C#
-    - String
-    - StringBuilder
+    - shader
 ---
 
+## unity实现halftone效果
 
