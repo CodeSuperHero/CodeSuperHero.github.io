@@ -6,6 +6,7 @@ date:       2019-6-20
 author:     "CodeSuperHero"
 header-img: "img/lua1.jpg"
 tags:
+    - lua
     - xlua
     - Unity
 ---
