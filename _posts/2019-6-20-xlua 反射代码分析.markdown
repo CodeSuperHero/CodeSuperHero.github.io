@@ -4,7 +4,7 @@ title:      "xlua 反射调用代码分析"
 subtitle:   ""
 date:       2019-6-20
 author:     "CodeSuperHero"
-header-img: "img/lua1.png"
+header-img: "img/lua1.jpg"
 tags:
     - xlua
     - Unity
