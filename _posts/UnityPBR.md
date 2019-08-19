@@ -74,9 +74,9 @@ Shader "Standard"
 
         Pass    // forward基础pass (directional light, emission, lightmaps, ...)
         {
-            Tags { "LightMode" = "ForwardBase" }    //只计算第一个平行光
-            Blend [_SrcBlend] [_DstBlend]           //源乘以目标混合，StandardShaderGUI 设置
-            ZWrite [_ZWrite]                        //设置深入写入模式，StandardShaderGUI 设置
+            Tags { "LightMode" = "ForwardBase" } //只计算第一个平行光
+            Blend [_SrcBlend] [_DstBlend] //srcCol *  [_SrcBlend] + destColr *  [_DstBlend]StandardShaderGUI 设置
+            ZWrite [_ZWrite] //设置深入写入模式，StandardShaderGUI 设置
             CGPROGRAM
             #pragma target 3.0
             
@@ -93,36 +93,191 @@ Shader "Standard"
             #pragma shader_feature _PARALLAXMAP //视差贴图，可以配合法线贴图表现更好的凹凸效果
 
             #pragma multi_compile_fwdbase //编译不同变体来处理不同光照贴图类型，阴影开关等
-            #pragma multi_compile_fog // 编译变种来处理不同的雾效
-            #pragma multi_compile_instancing
+            #pragma multi_compile_fog //编译变种来处理不同的雾效
+            #pragma multi_compile_instancing //编译变种来GPUInstance
 
-            #pragma vertex vertBase
-            #pragma fragment fragBase
+            #pragma vertex vertBase // "UnityStandardCoreForward.cginc" vertBase
+            #pragma fragment fragBase // "UnityStandardCoreForward.cginc" fragBase
             #include "UnityStandardCoreForward.cginc"
 
             ENDCG
-        }
-        Pass    // Additive forward pass (one light per pass)
+        }                             
+        Pass    // 除base光照外，逐光照渲染
         {
-
+            Name "FORWARD_DELTA"
+            Tags { "LightMode" = "ForwardAdd" }
+            Blend [_SrcBlend] One   // framebuffer color * 1
+            Fog { Color (0,0,0,0) } // in additive pass fog should be black
+            ZWrite Off //关闭深度缓存写入
+            ZTest LEqual //深度测试，小于。也就是在当前像素前面才渲染
+            CGPROGRAM
+            #pragma target 3.0
+            #pragma shader_feature _NORMALMAP
+            #pragma shader_feature _ _ALPHATEST_ON _ALPHABLEND_ON _ALPHAPREMULTIPLY_ON
+            #pragma shader_feature _METALLICGLOSSMAP
+            #pragma shader_feature _ _SMOOTHNESS_TEXTURE_ALBEDO_CHANNEL_A
+            #pragma shader_feature _ _SPECULARHIGHLIGHTS_OFF
+            #pragma shader_feature ___ _DETAIL_MULX2
+            #pragma shader_feature _PARALLAXMAP
+            #pragma multi_compile_fwdadd_fullshadows
+            #pragma multi_compile_fog
+            #pragma vertex vertAdd // "UnityStandardCoreForward.cginc" vertAdd
+            #pragma fragment fragAdd // "UnityStandardCoreForward.cginc" fragAdd
+            #include "UnityStandardCoreForward.cginc"
+            ENDCG
         }
-        Pass    // Shadow rendering pass
+        Pass    // Shadow rendering pass 将将物体的深度渲染到阴影贴图或深度纹理中
         {
-
+            Name "ShadowCaster"
+            Tags { "LightMode" = "ShadowCaster" } //此光照模型代表着将物体的深度渲染到阴影贴图或深度纹理
+            ZWrite On ZTest LEqual //开启zwrite, 小于z的写入 阴影深度缓冲
+            CGPROGRAM
+            #pragma target 3.0 
+            #pragma shader_feature _ _ALPHATEST_ON _ALPHABLEND_ON _ALPHAPREMULTIPLY_ON
+            #pragma shader_feature _METALLICGLOSSMAP
+            #pragma shader_feature _SMOOTHNESS_TEXTURE_ALBEDO_CHANNEL_A
+            #pragma shader_feature _PARALLAXMAP
+            #pragma multi_compile_shadowcaster //编译阴影投射变体
+            #pragma multi_compile_instancing
+            #pragma vertex vertShadowCaster //"UnityStandardShadow.cginc" vertShadowCaster
+            #pragma fragment fragShadowCaster //"UnityStandardShadow.cginc" fragShadowCaster
+            #include "UnityStandardShadow.cginc"
+            ENDCG
         }
-        Pass    // Deferred pass
+        Pass    // Deferred pass 延迟渲染
         {
-
+            Name "DEFERRED"
+            Tags { "LightMode" = "Deferred" } //光照模型为Deferred延迟渲染通道
+            CGPROGRAM
+            #pragma target 3.0
+            #pragma exclude_renderers nomrt
+            #pragma shader_feature _NORMALMAP
+            #pragma shader_feature _ _ALPHATEST_ON _ALPHABLEND_ON _ALPHAPREMULTIPLY_ON
+            #pragma shader_feature _EMISSION
+            #pragma shader_feature _METALLICGLOSSMAP
+            #pragma shader_feature _ _SMOOTHNESS_TEXTURE_ALBEDO_CHANNEL_A
+            #pragma shader_feature _ _SPECULARHIGHLIGHTS_OFF
+            #pragma shader_feature ___ _DETAIL_MULX2
+            #pragma shader_feature _PARALLAXMAP
+            #pragma multi_compile_prepassfinal
+            #pragma multi_compile_instancing
+            #pragma vertex vertDeferred
+            #pragma fragment fragDeferred
+            #include "UnityStandardCore.cginc"
+            ENDCG
         }
         Pass    // Extracts information for lightmapping, GI (emission, albedo, ...)
         {       // This pass it not used during regular rendering.
                 // 这个 pass 主要是用来计算 albedo,emission 给enlighten使用
+            Name "META"
+            Tags { "LightMode"="Meta" }
+            Cull Off
+            CGPROGRAM
+            #pragma vertex vert_meta
+            #pragma fragment frag_meta
+            #pragma shader_feature _EMISSION
+            #pragma shader_feature _METALLICGLOSSMAP
+            #pragma shader_feature _ _SMOOTHNESS_TEXTURE_ALBEDO_CHANNEL_A
+            #pragma shader_feature ___ _DETAIL_MULX2
+            #pragma shader_feature EDITOR_VISUALIZATION
+            #include "UnityStandardMeta.cginc"
+            ENDCG
         }     
     }
 
-    SubShader   // shadermodel 2.0
+    SubShader   // shadermodel 2.0, 用于仅支持 model 2.0 的设备
     {
+        Tags { "RenderType"="Opaque" "PerformanceChecks"="False" }
+        LOD 150
+        Pass
+        {
+            Name "FORWARD"
+            Tags { "LightMode" = "ForwardBase" }
+            Blend [_SrcBlend] [_DstBlend]
+            ZWrite [_ZWrite]
+            CGPROGRAM
+            #pragma target 2.0
+            #pragma shader_feature _NORMALMAP
+            #pragma shader_feature _ _ALPHATEST_ON _ALPHABLEND_ON _ALPHAPREMULTIPLY_ON
+            #pragma shader_feature _EMISSION
+            #pragma shader_feature _METALLICGLOSSMAP
+            #pragma shader_feature _ _SMOOTHNESS_TEXTURE_ALBEDO_CHANNEL_A
+            #pragma shader_feature _ _SPECULARHIGHLIGHTS_OFF
+            #pragma shader_feature _ _GLOSSYREFLECTIONS_OFF
+            // SM2.0: NOT SUPPORTED shader_feature ___ _DETAIL_MULX2
+            // SM2.0: NOT SUPPORTED shader_feature _PARALLAXMAP
+            #pragma skip_variants SHADOWS_SOFT DIRLIGHTMAP_COMBINED //调过SHADOWS_SOFT, DIRLIGHTMAP_COMBINED变体的编译
+            #pragma multi_compile_fwdbase
+            #pragma multi_compile_fog
+            #pragma vertex vertBase
+            #pragma fragment fragBase
+            #include "UnityStandardCoreForward.cginc"
+            ENDCG
+        }
+        Pass
+        {
+            Name "FORWARD_DELTA"
+            Tags { "LightMode" = "ForwardAdd" }
+            Blend [_SrcBlend] One
+            Fog { Color (0,0,0,0) } // in additive pass fog should be black
+            ZWrite Off
+            ZTest LEqual
+            CGPROGRAM
+            #pragma target 2.0
+            #pragma shader_feature _NORMALMAP
+            #pragma shader_feature _ _ALPHATEST_ON _ALPHABLEND_ON _ALPHAPREMULTIPLY_ON
+            #pragma shader_feature _METALLICGLOSSMAP
+            #pragma shader_feature _ _SMOOTHNESS_TEXTURE_ALBEDO_CHANNEL_A
+            #pragma shader_feature _ _SPECULARHIGHLIGHTS_OFF
+            #pragma shader_feature ___ _DETAIL_MULX2
+            // SM2.0: NOT SUPPORTED shader_feature _PARALLAXMAP
+            #pragma skip_variants SHADOWS_SOFT
+            #pragma multi_compile_fwdadd_fullshadows
+            #pragma multi_compile_fog
+            #pragma vertex vertAdd
+            #pragma fragment fragAdd
+            #include "UnityStandardCoreForward.cginc"
 
+            ENDCG
+        }
+        Pass {
+            Name "ShadowCaster"
+            Tags { "LightMode" = "ShadowCaster" }
+            ZWrite On ZTest LEqual
+            CGPROGRAM
+            #pragma target 2.0
+            #pragma shader_feature _ _ALPHATEST_ON _ALPHABLEND_ON _ALPHAPREMULTIPLY_ON
+            #pragma shader_feature _METALLICGLOSSMAP
+            #pragma shader_feature _SMOOTHNESS_TEXTURE_ALBEDO_CHANNEL_A
+            #pragma skip_variants SHADOWS_SOFT
+            #pragma multi_compile_shadowcaster
+            #pragma vertex vertShadowCaster
+            #pragma fragment fragShadowCaster
+            #include "UnityStandardShadow.cginc"
+            ENDCG
+        }
+        Pass
+        {
+            Name "META"
+            Tags { "LightMode"="Meta" }
+
+            Cull Off
+
+            CGPROGRAM
+            #pragma vertex vert_meta
+            #pragma fragment frag_meta
+
+            #pragma shader_feature _EMISSION
+            #pragma shader_feature _METALLICGLOSSMAP
+            #pragma shader_feature _ _SMOOTHNESS_TEXTURE_ALBEDO_CHANNEL_A
+            #pragma shader_feature ___ _DETAIL_MULX2
+            #pragma shader_feature EDITOR_VISUALIZATION
+
+            #include "UnityStandardMeta.cginc"
+            ENDCG
+        }
     }
+    FallBack "VertexLit"
+    CustomEditor "StandardShaderGUI"
 }
 ```
