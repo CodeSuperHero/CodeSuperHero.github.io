@@ -281,3 +281,53 @@ Shader "Standard"
     CustomEditor "StandardShaderGUI"
 }
 ```
+
+### shader 语法分析另外将
+
+### Standard Shader深入分析
+
+通常我们只用关心 forwardbase pass,而且目前以 shader model 3.0 为主，所以我们先看如下代码
+
+```
+Pass    // forward基础pass (directional light, emission, lightmaps, ...)
+        {
+            // part 1
+            Tags { "LightMode" = "ForwardBase" } //只计算第一个平行光
+            Blend [_SrcBlend] [_DstBlend] //srcCol *  [_SrcBlend] + destColr *  [_DstBlend]StandardShaderGUI 设置
+            ZWrite [_ZWrite] //设置深入写入模式，StandardShaderGUI 设置
+
+            // part 2
+            CGPROGRAM
+            #pragma target 3.0
+            
+            // part 2.1
+            #pragma shader_feature _NORMALMAP // 法线贴图
+            #pragma shader_feature _ _ALPHATEST_ON _ALPHABLEND_ON _ALPHAPREMULTIPLY_ON // 透明测试,透明混合, 预乘Alpha
+            #pragma shader_feature _EMISSION // 自发光
+            #pragma shader_feature _METALLICGLOSSMAP //金属光泽度贴图
+            #pragma shader_feature ___ _DETAIL_MULX2 //使用 _DetailAlbedoMap || _DetailNormalMap
+            #pragma shader_feature _ _SMOOTHNESS_TEXTURE_ALBEDO_CHANNEL_A //smoothness参数来自于albedo贴图的alpha通道
+            #pragma shader_feature _ _SPECULARHIGHLIGHTS_OFF //_SpecularHighlights 参数
+            #pragma shader_feature _ _GLOSSYREFLECTIONS_OFF //_GlossyReflections 参数
+            #pragma shader_feature _PARALLAXMAP //视差贴图，可以配合法线贴图表现更好的凹凸效果
+
+            // part 2.2
+            #pragma multi_compile_fwdbase //编译不同变体来处理不同光照贴图类型，阴影开关等
+            #pragma multi_compile_fog //编译变种来处理不同的雾效
+            #pragma multi_compile_instancing //编译变种来GPUInstance
+
+            //part 2.3
+            #pragma vertex vertBase // "UnityStandardCoreForward.cginc" vertBase
+            #pragma fragment fragBase // "UnityStandardCoreForward.cginc" fragBase
+            #include "UnityStandardCoreForward.cginc"
+
+            ENDCG
+        }   
+```
+
+- part 1 是shader定义了渲染队列，光照模式，alpha blend值，zbuffer 写入，具体参考shader语法
+- part 2 是shader主体，以 "CGPROGRAM"开头，以"ENDCG"结尾，代表是CG语法
+    - 2.1 是可选feature，在编辑器选择选项后，由 StandardShaderGUI.cs 设置
+    - 2.2 是unity预定义的变体，注意这里的 multi_xx 是选择编译而不是全部编译
+    - 2.3 shader执行的顶点和片段函数，定义在 "UnityStandardCoreForward.cginc" 文件里面，也是我们关心的重点
+
