@@ -6,8 +6,8 @@ date:       2020-02-09
 author:     "CodeSuperHero"
 header-img: "img/qua.jpg"
 tags:
-    - lua
-    - xlua
+    - Quaternion
+    - 四元数
     - Unity
 ---
 
