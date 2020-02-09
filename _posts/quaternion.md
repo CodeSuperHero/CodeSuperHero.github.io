@@ -1,0 +1,329 @@
+# 3D游戏四元数
+
+## vector3 点积和叉积计算
+
+v1*v2 = (v1.x * v2.x + v1.y * v2.y + v1.z * v2.z);
+
+点积结果 [1, -1] = [0, 180]
+
+v1 x v2 = (v1.y * v2.z - v1.z * v2.y, v1.z * v2.x - v1.x * v2.z, v1.x * v2.y - v1.y * v2.x)
+
+叉积结果 是一个同时垂直于 v1,v2的法向量，法向量方向取决于左手坐标系还是右手坐标系
+
+## 四元数定义
+
+四元数又称为 Hamilton(哈密顿)四元数，由爱尔兰数学家 Hamilton 在1843年发明的数学概念。我们在游戏中通常只使用四元数做3D空间的旋转变换，所以我们这里不过多的讨论四元数以及涉及的复数的数学概念，集中在游戏代码对于四元数的实现上。
+
+## 3D游戏旋转
+
+3D游戏旋转有三种解决方法。 矩阵，欧拉角，四元数。
+
+### 旋转矩阵
+
+3D游戏中的旋转变换矩阵是一个复合矩阵，分别由绕X周，绕Y轴，绕Z轴的3个旋转矩阵乘积得到
+
+绕X轴旋转矩阵
+<img src="/img/quaternion/3d_x.png" width = "275" height = "82" alt="图片名称"/>
+
+绕Y轴旋转矩阵
+<img src="/img/quaternion/3d_y.jpg" width = "275" height = "82" alt="图片名称"/>
+
+绕Z轴旋转矩阵
+<img src="/img/quaternion/3d_z.jpg" width = "275" height = "82" alt="图片名称"/>
+
+通过矩阵乘法我们得到
+<img src="/img/quaternion/m.jpg" width = "247" height = "34" alt="图片名称"/>
+
+M 就是我们的3D旋转矩阵，也成为 <b>旋转群 SO(3)</b>
+
+- 支持传递性，旋转顺序不影响旋转结果
+- 使用起来简单方便，实现矩阵乘法即可
+- 缺点是存储空间浪费
+- 因为矩阵可以复合，所以可能带来缩放和错切的问题
+- 矩阵无法插值，没有旋转过程
+- 不直观，理解苦难
+  
+### 欧拉角
+
+一般Unity中调整旋转角度都是用欧拉角来完成。
+欧拉角在四元数中的定义为 z:roll y:yaw x:pitch.组合成向量 (x,y,z) 标记了每个轴的旋转量
+欧拉角的旋转是依赖顺序的，Unity计算时采用 z - x - y的计算方式。
+
+- 最大的好处是直观，直接标识了每个轴的旋转量，非常易于理解
+- 存储空间小，只有3个float变量
+- 缺点是有不可传递，依赖于旋转顺序
+- 无法直接和三维向量做计算。
+- 致命缺点:万向锁。
+
+我们可以在unity做个万向锁小测试，放置一个3D物体，先按X轴旋转90度，再按Y轴旋转90度。这个时候无论我们调整Z还是调整Y，物体都只能按照Z轴旋转。失去了一个旋转轴。
+
+### 四元数
+
+unity中我们使用代码旋转物体的时候，通常都是使用四元数 (Quaternion (x,y,z,w))。
+
+- 没有万向锁
+- 存储空间相对较小，仅比欧拉角多一个float
+- 插值方便，还能做球面插值，避免向量的缩放
+- 最大的缺点，不直观，理解困难
+
+## 复数
+
+提到四元数，不可避免涉及到复数。
+z = a + bi 其中a,b 属于实数集合，i * i = -1
+假设有z1 = a + bi, z2 = c + di
+那么复数乘法就是 z1z2 = (a+bi)(c+di) = ac + adi + bci + bd(i*i)
+因为 i*i = -1
+所以可以简化为 z1z2 = ac - bd + adi + bci = ac - bd + (bc + ad)i
+我们把上式转换为矩阵表达形式
+<img src="/img/quaternion/fs_3.png" width = "106" height = "70" alt="图片名称"/>
+左侧是z1的矩阵形式，右侧是z2的向量形式，如果我们把右侧的z2也写成矩阵形式，那么复数的乘法其实就代表了矩阵的乘法
+<img src="/img/quaternion/fs_4.png" width = "220" height = "140" alt="图片名称"/>
+
+复平面坐标系，Re标识实部， Im代表虚部
+<img src="/img/quaternion/fushu.jpg" width = "377" height = "274" alt="图片名称"/>
+
+可以看到，∥z∥ 是复数 z 与坐标轴所形成的三角形的斜边长，而 a, b 分别为三角形的两个直角边．如果将斜边与实数轴 Re 正方向的夹角记为 θ 的话，按照三角函数的定义可以得出 
+<img src="/img/quaternion/fs_1.png" width = "121" height = "34" alt="图片名称"/>
+<img src="/img/quaternion/fs_2.png" width = "121" height = "34" alt="图片名称"/>
+结合上面的矩阵，我们可以得到
+<img src="/img/quaternion/fs_5.png" width = "532" height = "270" alt="图片名称"/>
+最后我们得到左侧的对角缩放矩阵和右侧的旋转矩阵，所以复数的乘法，实际代表了矩阵的缩放和旋转，如果 ||z|| = 1,也就是 a ^ 2 + b ^ 2 = 1 那么复数乘法就蜕变为纯粹的旋转矩阵。
+
+我们可以在复数平面定义一个旋转数 
+<img src="/img/quaternion/fs_6.jpg" width = "166" height = "32" alt="图片名称"/>
+对于任意的复数p乘以q：
+<img src="/img/quaternion/fs_7.jpg" width = "429" height = "171" alt="图片名称"/>
+
+<img src="/img/quaternion/fs_8.jpg" width = "369" height = "61" alt="图片名称"/>
+
+右侧是p的矩阵形式，左侧是旋转矩阵，我们就完成了对任意复数进行旋转的工作
+
+## 四元数
+
+四元数是超复数，也就是从复数拓展了两个虚部 j,k得到 q = a + bi + cj + dk (a,b,c,d 都属于实数集)hamilton定义i^2 = j^2 = k^2 = ijk = -1，可以推导出 ij = k, jk = i, ki = j ji = -k, kj = -i, ik = -j.(不满足交换律)
+hamilton 法线 ijk的乘法非常类似笛卡尔坐标系的向量叉积规则， ijk可以用来表示笛卡尔坐标系中的三个坐标系，同时保持虚数的性质
+<img src="/img/quaternion/q_1.jpg" width = "735" height = "730" alt="图片名称"/>
+
+同时我们可以将四元数的实部与虚部分开，用一个三维向量表示虚部
+q = [s,v] (v = xi + yj + zk])
+其实这里我们就发现四元数的定义和我们游戏中使用的定义非常类似。我个人对四元数的理解就是hamilton通过一种特殊的定义，让一个四维向量契合了复数的定义，这样四元数就具备了复数运算的性质。hamilton最开始定义四元数只是为了解决三维向量的乘法问题。他希望三维乘法运算同时满足下列四个性质:
+1. 运算产生的结果也是三维向量
+2. 存在一个元运算，任何三维向量进行元运算的结果就是其本身
+3. 对于任何一个运算，都存在一个逆运算，这两个运算的积是元运算
+4. 运算满足结合律 
+
+点积不满足性质1，叉积不满足性质3，而刚好复数满足所有性质，hamilton就借助对复数的拓展，得到了三维向量的乘法运算。而复数乘法运算可以表示旋转，所以游戏中其实只是使用了hamilton四元数的旋转性质。而刚好四元数可以使用四维向量表示。
+其余的数学运算推到可以参考复数和四元数的一些文章，这里不做阐述
+四元数有个四个维度，怎么和三维空间做运算，hamilton定义了一个纯四元数q(0,x,y,z),就像v(0,x,y) 是把三维空间投射到二维空间一样，纯四元数把四维空间投射到了三维空间。同时满足四元数定义，也就是乘法表示旋转。假设两个纯四元数 q1=[0,v]，q2=[0,u]，根据纯四元数的性质，有如下公式
+q1q2=[0-v\*u, 0 + v x u] = [-v\*u, v x u]
+
+上面提到复数的旋转书，同理，我们可以得到四元数的旋转数形式
+<img src="/img/quaternion/q_2.jpg" width = "182" height = "42" alt="图片名称"/>
+
+对于纯四元数 p[0, p], 绕单位四元数q旋转
+<img src="/img/quaternion/q_3.jpg" width = "118" height = "32" alt="图片名称"/>
+
+得到公式
+<img src="/img/quaternion/q_4.jpg" width = "257" height = "81" alt="图片名称"/>
+
+假设 单位四元数的向量和p的向量正交，则第一个点积为0，再代入上面的旋转数，我们会发现值是正确的
+但是一旦不正交，则不能得到正确值。hamilton 随后发现了一个新的计算形式
+p' = qpq*
+这个计算形式能完美表达旋转，同时因为 q 是单位四元数，则 q* = q-1,所以以上公式又等于
+p' = qpq-1
+q* = q-1 = [s, -v]
+
+
+[四元数详解](https://www.zhihu.com/question/23005815)
+
+## 四元数的实现
+
+```
+public struct DHQuaternion
+{
+    public float x; //vector.x
+    public float y; //vector.y
+    public float z; //vector.z
+    public float w; //theta
+}
+```
+
+我们可以借助纯四元数定义得到一个四元数的值
+
+```
+public static DHQuaternion FromToRotation(Vector3 from, Vector3 to)
+{
+    var angle = Mathf.Acos(Vector3.Dot(from, to));
+    var axis = Vector3.Cross(from, to).normalized;
+    float s = Mathf.Sin(angle / 2);
+    float c = Mathf.Cos(angle / 2);
+    var q = new DHQuaternion();
+    q.x = s * axis.x;
+    q.y = s * axis.y;
+    q.z = s * axis.z;
+    q.w = c;
+    return q;
+}
+```
+按照旋转数的定义得到一个四元数
+
+```
+public static Vector3 operator *(DHQuaternion q, Vector3 v)
+{
+    // nVidia SDK implementation
+    Vector3 qvec = new Vector3(q.x, q.y, q.z);
+    Vector3 uv = Vector3.Cross(qvec, v);
+    Vector3 uuv = Vector3.Cross(qvec, uv);
+    uv *= 2 * q.w;
+    uuv *= 2;
+    return v + uv + uuv;
+}
+```
+
+这里我们并没有按照 p' = qpq-1的形式在四维空间计算，而是使用了nvidia 的实现。nvdia是通过解析法进行数学推导，化简了hamilton的四元数旋转算法。
+这里我们可以参考milo在知乎给出的答案
+<img src="/img/quaternion/q_5.jpg" width = "668" height = "859" alt="图片名称"/>
+
+这种根据公式推导得出简单计算的方法又叫解析法
+
+[四元数乘法](https://www.zhihu.com/question/37710539/answer/82835041?from=profile_answer_card)
+
+
+我们先按四元数的性质添加一些计算方法
+
+```
+pubic DHQuaternion normalized
+{
+    get
+    {
+        var dot = Dot(this, this);
+        return this / Mathf.Sqrt(dot);
+    }
+}
+
+public static float Dot(DHQuaternion a, DHQuaternion b)
+{
+    return a.x * b.x + a.y * b.y + a.z * b.z + a.w * b.w;
+}
+
+public static DHQuaternion operator +(DHQuaternion a, DHQuaternion b)
+{
+    return new DHQuaternion(a.x + b.x, a.y + b.y, a.z + b.z, a.w + b.w);
+}
+
+public static DHQuaternion operator /(DHQuaternion q, float s)
+{
+    return new DHQuaternion(q.x / s, q.y / s, q.z / s, q.w / s);
+}
+
+public static Vector3 operator *(DHQuaternion q, Vector3 v)
+{
+    Vector3 qvec = new Vector3(q.x, q.y, q.z);
+    Vector3 uv = Vector3.Cross(qvec, v);
+    Vector3 uuv = Vector3.Cross(qvec, uv);
+    uv *= 2 * q.w;
+    uuv *= 2;
+    return v + uv + uuv;
+}
+public static DHQuaternion operator *(DHQuaternion a, DHQuaternion b)
+{
+    return new DHQuaternion(
+        b.w * a.x + b.x * a.w + b.y * a.z - b.z * a.y,
+        b.w * a.y - b.x * a.z + b.y * a.w + b.z * a.x,
+        b.w * a.z + b.x * a.y - b.y * a.x + b.z * a.w,
+        b.w * a.w - b.x * a.x - b.y * a.y - b.z * a.z
+    );
+}
+public static DHQuaternion operator *(float s, DHQuaternion q)
+{
+    return new DHQuaternion(s * q.x, s * q.y, s * q.z, s * q.w);
+}
+public static DHQuaternion operator *(DHQuaternion q, float s)
+{
+    return new DHQuaternion(s * q.x, s * q.y, s * q.z, s * q.w);
+}
+```
+
+线性插值
+
+<img src="/img/quaternion/q_6.jpg" width = "434" height = "213" alt="图片名称"/>
+
+左边是弦上插值 p = (1 - t) * a + t * b;
+右边是球面插值
+
+<img src="/img/quaternion/q_8.jpg" width = "338" height = "58" alt="图片名称"/>
+
+```
+public static DHQuaternion Lerp(DHQuaternion a, DHQuaternion b, float t)
+{
+    return ((1 - t) * a + t * b).normalized;
+}
+
+public static DHQuaternion Slerp(DHQuaternion a, DHQuaternion b, float t)
+{
+    var cos0 = Dot(a, b);
+    if (cos0 < 0)
+    {
+        a = new DHQuaternion(-a.x, -a.y, -a.z, a.w);
+        cos0 = -cos0;
+    }
+    float scale0, scale1;
+    if (cos0 > 0.9995f)
+    {
+        scale0 = 1.0f - t;
+        scale1 = t;
+    }
+    else
+    {
+        float sin0 = Mathf.Sqrt(1.0f - cos0 * cos0);
+        float atan2 = Mathf.Atan2(sin0, cos0);
+        scale0 = Mathf.Sin((1.0f - t) * atan2) / sin0;
+        scale1 = Mathf.Sin(t * atan2) / sin0;
+    }
+    return a * scale0 + b * scale1;
+}
+```
+
+弦上插值是不需要判断角度。但是球面插值是需要判断角度，防止饶路远球弧。
+
+```
+using UnityEngine;
+
+public class QuaTest : MonoBehaviour
+{
+    public Transform TargetDir;
+
+    void Start()
+    {
+        var from = transform.forward;
+        var to = TargetDir.forward;
+        Debug.LogFormat("[ from vector3 ] : ({0},{1},{2})", from.x, from.y, from.z);
+        Debug.LogFormat("[ to vector3 ] : ({0},{1},{2})", to.x, to.y, to.z);
+        var qua = Quaternion.FromToRotation(transform.forward, TargetDir.forward);
+        var dhQua = DHQuaternion.FromToRotation(transform.forward, TargetDir.forward);
+        Debug.LogFormat("[ qua ]: ({0},{1},{2},{3})", qua.x, qua.y, qua.z, qua.w);
+        Debug.LogFormat("[ dhqua ]:({0},{1},{2},{3})", dhQua.x, dhQua.y, dhQua.z, dhQua.w);
+
+        var toDir = qua * from;
+        var toDHDir = dhQua * from;
+
+        Debug.LogFormat("[ toDir ] : ({0},{1},{2})", toDir.x, toDir.y, toDir.z);
+        Debug.LogFormat("[ toDHDir ] : ({0},{1},{2})", toDHDir.x, toDHDir.y, toDHDir.z);
+
+        var lerpQua = Quaternion.Lerp(transform.rotation, qua, 0.5f);
+        var thisDHQua = new DHQuaternion(transform.rotation.x, transform.rotation.y, transform.rotation.z, transform.rotation.w);
+        var lerpDHQua = DHQuaternion.Lerp(thisDHQua, dhQua, 0.5f);
+
+        Debug.LogFormat("[ lerpQua ]: ({0},{1},{2},{3})", lerpQua.x, lerpQua.y, lerpQua.z, lerpQua.w);
+        Debug.LogFormat("[ lerpDHQua ]:({0},{1},{2},{3})", lerpDHQua.x, lerpDHQua.y, lerpDHQua.z, lerpDHQua.w);
+
+        var slerpQua = Quaternion.Slerp(transform.rotation, qua, 0.5f);
+        var slerpDHQua = DHQuaternion.Slerp(thisDHQua, dhQua, 0.5f);
+        Debug.LogFormat("[ slerpQua ]: ({0},{1},{2},{3})", slerpQua.x, slerpQua.y, slerpQua.z, slerpQua.w);
+        Debug.LogFormat("[ slerpDHQua ]:({0},{1},{2},{3})", slerpDHQua.x, slerpDHQua.y, slerpDHQua.z, slerpDHQua.w);
+    }
+}
+```
+最后我们写个测试代码检查是否和unity运算结果一致，以判断我们的实现是否正确
+
+<img src="/img/quaternion/q_7.jpg" width = "369" height = "325" alt="图片名称"/>
