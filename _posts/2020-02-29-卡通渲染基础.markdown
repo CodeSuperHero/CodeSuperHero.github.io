@@ -25,7 +25,7 @@ shader(着色器)是一种用于图像处理的计算机程序。和lua一样，
 ### 渲染管线
 理解shader前，我们需要先理解调用shader代码的框架：渲染管线(Render Pipline)
 
-<center><img src="img/toonshading//renderpipline.jpg" width = "556" height = "81" align=center alt="rp"/></center>
+<img src="img/toonshading/renderpipline.jpg" width = "556" height = "81" align=center alt="rp"/>
 <center>Real-time Rendering 4th</center>
 - 应用阶段：CPU 阶段，处理各种渲染资源，调用GPU绘制接口，传递渲染数据。 drawcall数代表cpu调用GPU的次数，单纯的drawcall指令已经不是性能瓶颈，我们更应该关注 setpasscall 和 uploadtexture 的性能
 - 几何阶段：GPU 接收应用阶段数据，执行模型顶点变换，输出顶点变换后的数据。对应shader代码的 vertex 函数。这个阶段是GPU执行效率最高的阶段，多数Shader优化都是将后续的处理移动到几何阶段来完成
@@ -134,7 +134,7 @@ shader没有严格分类，对于平时开发大致可以分为 Unlit Shader, Co
 
 卡通渲染，又称非真实感绘制(NPR,Non-photorealistic rendering)，在画面上有多种表现形式，目前普遍指代动画感渲染，其中又通常指日式卡通渲染。如《崩坏3》《塞尔达传说 旷野之息》
 
-<center><img src="img/toonshading/benghuai3.jpg" width = "366" height = "366" align=center alt="rp"/><img src="img/toonshading/saierda.jpg" width = "366" height = "366" align=center alt="rp"/></center>
+<img src="img/toonshading/benghuai3.jpg" width = "366" height = "366" align=center alt="rp"/><img src="img/toonshading/saierda.jpg" width = "366" height = "366" align=center alt="rp"/>
 #### 光照
 
 开始光照前，我们可以简单了解下Unity中可编程渲染管线的分类
@@ -198,20 +198,20 @@ fixed4 frag (v2f i) : SV_Target
 
 ```
 
-<center><img src="img/toonshading/lambert.jpg" width = "409" height = "328" align=center alt="rp"/></center>
+<img src="img/toonshading/lambert.jpg" width = "409" height = "328" align=center alt="rp"/>
 lambert光照公式截断了背光的颜色，所以背光面会看起来很黑，valve 公司在半条命提出了half lambert
 ```
 half NdotL = dot(normal, lightDir) * 0.5 + 0.5;
 ```
 这个公式虽然提高了整体亮度，但是也损失了颜色区域
-<center><img src="img/toonshading/halflambert.jpg" width = "409" height = "328" align=center alt="rp"/></center>
+<img src="img/toonshading/halflambert.jpg" width = "409" height = "328" align=center alt="rp"/>
 所以后续有改良版本的lambert,叫 diffuse wrap
 
 ```
 half NdotL = max(0.0, dot(normal, lightDir));// * 0.5 + 0.5;
 NdotL = pow(NdotL * 0.5 + 0.5, 2);
 ```
-<center><img src="img/toonshading/diffusewrap.jpg" width = "409" height = "328" align=center alt="rp"/></center>
+<img src="img/toonshading/diffusewrap.jpg" width = "409" height = "328" align=center alt="rp"/>
 既完整保留了过度区域，又增加了暗处的颜色，这里展开讲解了 Diffuse shader的几种光照处理，只是想说明在NPR渲染中，没有正确的公式，只要看起来像就是正确的，所以在NPR渲染中大量公式都被修改，比如后面要讲的边缘光处理就是纯靠视觉调整公式。
 
 #### 法线处理
@@ -251,7 +251,7 @@ half intensity = step(0, NdotL);
 half3 lambertDiffuse = col * intensity * _LightColor0.rgb;
 ```
 
-<center><img src="img/toonshading/step.jpg" width = "409" height = "328" align=center alt="rp"/></center>
+<img src="img/toonshading/step.jpg" width = "409" height = "328" align=center alt="rp"/>
 - 分层的地方太过于生硬
 - 暗部太黑，丢失了色彩
 - 只有两层颜色
@@ -272,12 +272,12 @@ else
 }
 half3 lambertDiffuse = (intensity * _LightColor0.rgb + UNITY_LIGHTMODEL_AMBIENT) * col;
 ```
-<center><img src="img/toonshading/smoothstep.png" width = "409" height = "328" align=center alt="rp"/></center>
+<img src="img/toonshading/smoothstep.png" width = "409" height = "328" align=center alt="rp"/>
 添加了 smoothstep 平滑了过度
 添加了 UNITY_LIGHTMODEL_AMBIENT 环境光颜色增加暗部的亮度。
 用 if 添加了分层，但是推荐用美术出图来进行分层，还可以起到更好的平滑作用
 
-<center><img src="img/toonshading/ramp.jpg" width = "333" height = "52" align=center alt="rp"/></center>
+<img src="img/toonshading/ramp.jpg" width = "333" height = "52" align=center alt="rp"/>
 #### 卡通高光
 
 - 前面提到了 Diffuse + Ambient 光照处理，一个标准的经验模型是 Diffuse + Specular + Ambient。而传统经验模型通常采用 Blinn-Phong 高光模型，我们先看一下经验模型下的颜色是什么样子的。
@@ -316,7 +316,7 @@ fixed4 frag (v2f i) : SV_Target
 }
 ```
 
-<center><img src="img/toonshading/lighting.jpg" width = "409" height = "339" align=center alt="rp"/></center>
+<img src="img/toonshading/lighting.jpg" width = "409" height = "339" align=center alt="rp"/>
 一些游戏浓浓的塑料感就是来自于这套光照模型，这里不做更深入的讨论，继续卡通化
 
 ```
@@ -327,7 +327,7 @@ float specularIntensitySmooth = smoothstep(0.005, 0.01, specularIntensity);
 float3 specular = specularIntensitySmooth * _SpecularColor.rgb;
 ```
 
-<center><img src="img/toonshading/toonspecular.jpg" width = "409" height = "328" align=center alt="rp"/></center>
+<img src="img/toonshading/toonspecular.jpg" width = "409" height = "328" align=center alt="rp"/>
 通过对高光强度值进行二值化从而达到卡通高光的效果
 
 #### 卡通边缘高光
@@ -336,7 +336,7 @@ float3 specular = specularIntensitySmooth * _SpecularColor.rgb;
 float rimValue = 1 - max(0, dot(normal, viewDir));
 half3 rimColor = _RimColor.rgb * pow(rimValue, _RimIntensity);
 ```
-<center><img src="img/toonshading/rim.jpg" width = "409" height = "328" align=center alt="rp"/></center>
+<img src="img/toonshading/rim.jpg" width = "409" height = "328" align=center alt="rp"/>
 经验模型的边缘高光就是取法线和视线的点积角度，接近0的地方也就是边缘处，但是这种计算公式出来的边缘高光效果并不好，而且不够卡通。
 
 ```
@@ -344,7 +344,7 @@ float rimValue = 1 - dot(normal, viewDir);
 float rimIntensity = smoothstep(_RimRange - 0.01, _RimRange + 0.01, rimValue);
 float3 rimColor = rimIntensity * _RimColor;
 ```
-<center><img src="img/toonshading/toonrim.jpg" width = "409" height = "328" align=center alt="rp"/></center>
+<img src="img/toonshading/toonrim.jpg" width = "409" height = "328" align=center alt="rp"/>
 瞎改一下公式，看起来好看就够了。这个公式网上找的，没什么道理。
 卡通的光照部分大致处理完了。但是大家看到模型的效果并不好，因为卡通渲染还需要大量的静态贴图来辅助，AO贴图，高光MASK贴图，边缘高光的暗部处理，明暗颜色都由贴图来完成等等。这里就体现TA的作用了。
 
@@ -397,7 +397,7 @@ Pass
 }
 ```
 
-<center><img src="img/toonshading/outline.jpg" width = "409" height = "328" align=center alt="rp"/></center>
+<img src="img/toonshading/outline.jpg" width = "409" height = "328" align=center alt="rp"/>
 #### 阴影
 
 如果游戏允许开实时阴影，则调用unity的API。使用Unity的实时阴影。这里介绍一种简易的阴影实现方式。
@@ -463,7 +463,7 @@ Pass
 通过相似三角形把模型的顶点坐标转换到 "y = shadowHeight" 平面，从而得到相对真实的阴影，但是无法适应不平的地面。
 这里出现了三个需要关注的知识点
 
-<center><img src="img/toonshading/shadow.jpg" width = "409" height = "328" align=center alt="rp"/></center>
+<img src="img/toonshading/shadow.jpg" width = "409" height = "328" align=center alt="rp"/>
 
 ```
 Stencil             // 模板测试，写入模板缓冲
@@ -481,7 +481,7 @@ Blend SrcAlpha OneMinusSrcAlpha //颜色混合，当前混合公式 ShaderColor 
 ```
 
 第一个是蒙版测试，第二个是颜色混合，第三个是关闭深入写入。这三个操作都集中在渲染管线的光栅化阶段
-<center><img src="img/toonshading/guangshanhua.jpg" width = "764" height = "406" align=center alt="rp"/></center>
+<img src="img/toonshading/guangshanhua.jpg" width = "764" height = "406" align=center alt="rp"/>
 #### 烘焙处理
 
 如果场景也使用自定义shader，那么我们还需要额外处理烘焙，Unity 的 Enlighten 烘焙系统，需要shader 提供烘焙数据，不然是无法参与烘焙的
